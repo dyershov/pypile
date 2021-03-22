@@ -10,7 +10,25 @@ class SparseHistogram:
         def inv(self, index):
             return ((index + 0.0) * self.__delta,
                     (index + 0.5) * self.__delta,
-                    (index + 1) * self.__delta)
+                    (index + 1.0) * self.__delta)
+
+    class LogBins:
+        def __init__(self, delta, alpha):
+            from math import log
+            self.__delta = delta
+            self.__k = (alpha - 1) / delta
+            self.__k_inv = 1 / self.__k
+            self.__log_alpha = log(alpha)
+
+        def __call__(self, value):
+            from math import floor, log
+            return int(floor(log(self.__k * value + 1) / self.__log_alpha))
+
+        def inv(self, index):
+            from math import exp
+            l, h = (self.__k_inv * (exp(self.__log_alpha * (index + 0)) - 1),
+                    self.__k_inv * (exp(self.__log_alpha * (index + 1)) - 1))
+            return (l, l + 0.5 * (h - l), h)
 
     def __init__(self, bin_fn):
         if not hasattr(bin_fn, '__iter__'):
